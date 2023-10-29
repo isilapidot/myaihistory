@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select a Scenario</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script>
+        function disableButtons() {
+            var buttons = document.querySelectorAll('.scenario-button, .scenario-button-2');
+            buttons.forEach(function(button) {
+                button.onclick = function() {
+                    buttons.forEach(function(btn) {
+                        btn.classList.add('disabled');
+                        btn.onclick = function(event) {
+                            event.preventDefault();
+                        }
+                    });
+                }
+            });
+        }
+        window.onload = disableButtons;
+    </script>
+</head>
+<body>
+    <div class="scenario-container">
+        <!-- Back button -->
+        <div class="back-button-container">
+            <a href="index.html" class="scenario-button">Back</a>
+        </div>
+
+        <h1>Select the historical scenario you want to enter, or create your own!</h1>
+        <p>Please wait up to 15 seconds before moving to the next page.</p>
+        <div class="scenario-buttons">
+            <a href="/viking" class="scenario-button">Viking Era</a>
+            <a href="/american_revolution" class="scenario-button">American Revolution</a>
+            <a href="/civil_war" class="scenario-button">US Civil War</a>
+            <a href="/wwi" class="scenario-button">World War I</a>
+            <a href="/wwii" class="scenario-button">World War II</a>
+            <a href="/cold_war" class="scenario-button">Cold War</a>
+        </div>
+        <!-- New button for Mr. U's Classroom -->
+        <div class="center">
+            <a href="/mru_classroom" class="scenario-button-2">Mr. U's Classroom</a>
+        </div>
+        <form action="/custom" method="POST" class="create-scenario">
+            <input type="text" name="customScenario" placeholder="Enter your own historical scenario" required>
+            <input type="submit" value="Create Scenario">
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel="stylesheet" type="text/css" href="/views.css">
+    <style>
+        .container {
+            position: relative;
+        }
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            text-align: center;
+            border: 2px solid black; /* Add a black border */
+        }
+        .back-button:hover {
+            background-color: #0056b3;
+            border-color: #333; /* Change border color on hover */
+         }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="scenarios.html" class="back-button">Back</a>
+        <h1><%= title %></h1>
+        <div id="scenario-container" style="display: none;">
+            <div id="text-container">
+                <p id="scenario"><%= scenario.split("[")[0] %></p>
+            </div>
+            <div id="loading-message" style="display: none;">Loading...</div>
+            <div id="choice-container">
+                <% let choices = scenario.match(/\[(.*?)\]/g).map(function(val) {
+                    return val.replace(/[\[\]]/g, '');
+                });
+                %>
+                <button class="choice-button"><%= choices[0] %></button>
+                <button class="choice-button"><%= choices[1] %></button>
+            </div>
+        </div>
+        <script>
+            window.onload = function() {
+                document.getElementById('scenario-container').style.display = 'block';
+            }
+            let history = <%- initialHistory %>;
+
+            function handleChoice(event) {
+
+            // Get the choice text
+            const choice = event.target.textContent;
+            document.getElementById('loading-message').style.display = 'block';
+            // Remove the event listener to prevent additional API calls
+            event.target.removeEventListener('click', handleChoice);
+
+            // Add the user's choice to the conversation history
+            history.push({
+                role: "user",
+                content: choice
+            });
+
+            // Create the request
+            const request = new Request('/api/continue_story', {
+                method: 'POST',
+                body: JSON.stringify({ choice, history }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            // Send the request
+            fetch(request)
+                .then(response => response.json())
+                .then(data => {
+                    // Hide the loading screen and display the scenario container
+                    document.getElementById('loading-message').style.display = 'none';
+                    document.getElementById('scenario-container').style.display = 'block';
+
+                    // Update the scenario text with the response
+                    let newParagraph = document.createElement('p');
+                    let dataParts = data.split(/\[(.*?)\]/g);
+                    let dataText = dataParts.slice(0, -4).join('');
+                    newParagraph.textContent = dataText;
+
+                    document.getElementById('text-container').appendChild(newParagraph);
+
+
+                    // Add the assistant's response to the conversation history
+                    history.push({
+                        role: "assistant",
+                        content: data
+                    });
+
+                    // Extract new choices from response
+                    let newChoices = data.match(/\[(.*?)\]/g).map(function(val) {
+                        return val.replace(/[\[\]]/g, '');
+                    });
+
+                    // Only keep the last two choices if there are at least two choices
+                    if (newChoices.length >= 2) {
+                        newChoices = newChoices.slice(-2);
+                    }
+
+                    // Clear old buttons
+                    let choiceContainer = document.getElementById('choice-container');
+                    choiceContainer.innerHTML = '';
+
+                    // Create new buttons
+                    newChoices.forEach(choiceText => {
+                        let newButton = document.createElement('button');
+                        newButton.textContent = choiceText;
+                        newButton.classList.add('choice-button');
+                        newButton.addEventListener('click', handleChoice);
+                        choiceContainer.appendChild(newButton);
+                    });
+                })
+                .catch(error => {
+                    // If an error occurs, hide the loading screen and display the scenario container
+                    document.getElementById('scenario-container').style.display = 'block';
+                    console.error(error);
+            });
+        }
+
+        document.querySelectorAll('.choice-button').forEach(button => {
+            button.addEventListener('click', handleChoice);
+        });
+
+        </script>
+    </div>
+</body>
+</html>
